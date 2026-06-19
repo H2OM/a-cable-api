@@ -38,8 +38,8 @@ yarn-error.log*
 
 /desktop.ini
 
-/server/composer/vendor/
-/server/composer/composer.lock
-/server/.env
-/server/.idea/
-/server/repositories/parsers
+/composer/vendor/
+/composer/composer.lock
+.env
+.idea/
+/repositories/parsers
