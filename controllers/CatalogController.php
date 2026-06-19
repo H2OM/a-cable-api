@@ -27,11 +27,15 @@ readonly class CatalogController {
      * @throws ResponseException
      */
     public function getAction(): Response {
+        $page = $this->request->get('page');
+        $limit = $this->request->get('limit');
         $filters_params = $this->request->get();
 
         if(empty($filters_params['category'])) {
             return Response::jsonError(message: ResponseMessage::ERROR_DATA);
         }
+
+        unset($filters_params['page'], $filters_params['limit']);
 
         $catalog = $this->productsService->getCatalogByFilters($filters_params);
         $filters = $this->filtersService->getFiltersGroupByCode($filters_params['category']);
