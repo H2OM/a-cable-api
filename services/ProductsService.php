@@ -39,6 +39,10 @@ readonly class ProductsService {
         return $this->productsRepository->getCount($categoryTypeId, $brandId);
     }
 
+    public function getCountByFilters(array $filters): int {
+        return $this->productsRepository->getCountByFilters($filters);
+    }
+
     /**
      * Получение популярных и скидочных товаров
      *
@@ -65,11 +69,13 @@ readonly class ProductsService {
     /**
      * Получение каталога товаров с фильтрацией
      *
+     * @param int $page
+     * @param int $limit
      * @param array $filters
      * @return array
      */
-    public function getCatalogByFilters(array $filters): array {
-        $catalog = $this->productsRepository->getByFilters($filters);
+    public function getCatalogByFilters(int $page, int $limit, array $filters): array {
+        $catalog = $this->productsRepository->getByFilters(factor: $page - 1, limit: $limit, filters: $filters);
 
         if(count($catalog) === 0 || !isset($filters['favorite'])) return $catalog;
 

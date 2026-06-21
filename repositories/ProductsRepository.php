@@ -120,6 +120,33 @@ readonly class ProductsRepository {
     }
 
     /**
+     * Получение кол-во отфильтрованных товаров
+     *
+     * @param array $filters
+     * @return int
+     */
+    public function getCountByFilters(array $filters): int {
+        $sql = "
+            SELECT 
+                COUNT(DISTINCT products.id) AS count
+            FROM products
+            JOIN categories_types ON products.category_type_id = categories_types.id
+            JOIN categories ON categories_types.category_id = categories.id
+        ";
+
+        $preparedFilters = $this->prepareFilters($filters);
+        $filtersKeys = array_keys($filters);
+
+        rsort($filtersKeys);
+
+        if(in_array('brand', $filtersKeys)) {
+            $sql .= " LEFT JOIN brands ON products.brand_id = brands.id";
+        }
+
+        return (int)($this->db->fetchOne("$sql $preparedFilters[0]", $preparedFilters[1])['count'] ?? 0);
+    }
+
+    /**
      * Получение популярных и скидочных товаров
      *
      * @return array
@@ -139,94 +166,13 @@ readonly class ProductsRepository {
     /**
      * Получение товаров по фильтрам
      *
+     * @param int $factor
+     * @param int $limit
      * @param array $filters
      * @return array
      */
-    public function getByFilters(array $filters): array {
-        $whereCondition = [];
-        $filtersCondition = [];
-        $endCondition = 'GROUP BY products.id';
-        $wherePrepareValues = [];
-        $filtersPrepareValues = [];
-
-        foreach ($filters as $key => $value) {
-            switch($key) {
-                case "sort":
-                    $endCondition .= match ($value) {
-                        'low-to-high' => ' ORDER BY products.price ASC',
-                        'high-to-low' => ' ORDER BY products.price DESC',
-                        default => ''
-                    };
-
-                    break;
-                case "category":
-                    $whereCondition[] = "categories.code = ?";
-                    $wherePrepareValues[] = $value;
-
-                    break;
-                case "price":
-                    $price = explode(",", $value);
-
-                    if(count($price) === 2 && is_numeric($price[0]) && is_numeric($price[1])) {
-                        array_push($whereCondition, "products.price <= ?", "products.price >= ?");
-                        array_push($wherePrepareValues, $price[1], $price[0]);
-                    }
-
-                    break;
-                case "sale":
-                    switch($value) {
-                        case "yes":
-                            $whereCondition[] = "products.price <= (products.price_old * 1)";
-
-                            break;
-                        case "no":
-                            $whereCondition[] = "products.price_old  = 0";
-
-                            break;
-                        default:
-                            break;
-                    }
-
-                    break;
-                case "brand":
-                case "type":
-                    $filterCode = match ($key) {
-                        'brand' => "brands",
-                        'type' => "categories_types",
-                    };
-
-                    $filterValues = explode(",", $value);
-                    $wherePrepareValues = [...$wherePrepareValues, ...$filterValues];
-                    $wheres = implode(",", array_fill(0, count($filterValues), '?'));
-
-                    $whereCondition[] = "$filterCode.code IN ($wheres)";
-
-                    break;
-                default:
-                    $filterValues = explode(",", $value);
-                    $wheres = implode(",", array_fill(0, count($filterValues), '?'));
-
-                    $filtersCondition[] = "(filters.code = ? AND filters_values.code IN ($wheres))";
-
-                    array_push($filtersPrepareValues, $key, ...$filterValues);
-
-                    break;
-            }
-        }
-
-        if(count($filtersCondition) > 0) {
-            $whereCondition[] = "(" . implode(' OR ', $filtersCondition) . ")";
-            $wherePrepareValues = [...$wherePrepareValues, ...$filtersPrepareValues];
-
-            $endCondition .= " HAVING COUNT(DISTINCT filters.code) = " . count($filtersCondition);
-        }
-
-        if(count($whereCondition) > 0) {
-            $whereCondition = " WHERE ". implode(' AND ', $whereCondition);
-
-        } else {
-            $whereCondition = "";
-        }
+    public function getByFilters(int $factor, int $limit, array $filters): array {
+        $preparedFilters = $this->prepareFilters($filters);
 
         return $this->hydrator->decodeJson($this->db->fetchAll("
             SELECT 
@@ -243,16 +189,13 @@ readonly class ProductsRepository {
                     WHERE p_v.product_id = products.id
                 ) AS variations
             FROM products
-            JOIN filters_values_products ON products.id = filters_values_products.product_id
-            JOIN filters_values ON filters_values_products.filter_value_id = filters_values.id 
-            JOIN filters ON filters_values.filter_id = filters.id
             JOIN categories_types ON products.category_type_id = categories_types.id
             JOIN categories ON categories_types.category_id = categories.id 
             LEFT JOIN products_stocks ON products_stocks.product_id = products.id
-            LEFT JOIN brands ON products.brand_id = brands.id
-            $whereCondition 
-            $endCondition
-        ", $wherePrepareValues), ['variations']);
+            LEFT JOIN brands ON products.brand_id = brands.id 
+            $preparedFilters[0]
+            LIMIT ?, ?
+        ", [...$preparedFilters[1], $factor * $limit, $limit]), ['variations']);
     }
 
     /**
@@ -582,5 +525,106 @@ readonly class ProductsRepository {
             LEFT JOIN brands ON products.brand_id = brands.id
             WHERE products.id IN ($placeholders)
             GROUP BY products.id";
+    }
+
+    /**
+     * Подготовка фильтров
+     *
+     * @param array $filters
+     * @return array
+     */
+    private function prepareFilters(array $filters): array {
+        $whereCondition = [];
+        $filtersCondition = [];
+        $wherePrepareValues = [];
+        $filtersPrepareValues = [];
+        $endCondition = '';
+        $filtersJoins = '';
+
+        foreach ($filters as $key => $value) {
+            switch($key) {
+                case "sort":
+                    $endCondition .= match ($value) {
+                        'low-to-high' => ' ORDER BY products.price ASC',
+                        'high-to-low' => ' ORDER BY products.price DESC',
+                        default => ''
+                    };
+
+                    break;
+                case "category":
+                    $whereCondition[] = "categories.code = ?";
+                    $wherePrepareValues[] = $value;
+
+                    break;
+                case "price":
+                    $price = explode(",", $value);
+
+                    if(count($price) === 2 && is_numeric($price[0]) && is_numeric($price[1])) {
+                        array_push($whereCondition, "products.price <= ?", "products.price >= ?");
+                        array_push($wherePrepareValues, $price[1], $price[0]);
+                    }
+
+                    break;
+                case "sale":
+                    switch($value) {
+                        case "yes":
+                            $whereCondition[] = "products.price <= (products.price_old * 1)";
+
+                            break;
+                        case "no":
+                            $whereCondition[] = "products.price_old  = 0";
+
+                            break;
+                        default:
+                            break;
+                    }
+
+                    break;
+                case "brand":
+                case "type":
+                    $filterCode = match ($key) {
+                        'brand' => "brands",
+                        'type' => "categories_types",
+                    };
+
+                    $filterValues = explode(",", $value);
+                    $wherePrepareValues = [...$wherePrepareValues, ...$filterValues];
+                    $wheres = implode(",", array_fill(0, count($filterValues), '?'));
+
+                    $whereCondition[] = "$filterCode.code IN ($wheres)";
+
+                    break;
+                default:
+                    $filterValues = explode(",", $value);
+                    $wheres = implode(",", array_fill(0, count($filterValues), '?'));
+
+                    $filtersCondition[] = "(filters.code = ? AND filters_values.code IN ($wheres))";
+
+                    array_push($filtersPrepareValues, $key, ...$filterValues);
+
+                    break;
+            }
+        }
+
+        if(count($filtersCondition) > 0) {
+            $whereCondition[] = "(" . implode(' OR ', $filtersCondition) . ")";
+            $wherePrepareValues = [...$wherePrepareValues, ...$filtersPrepareValues];
+
+            $endCondition .= "GROUP BY products.id HAVING COUNT(DISTINCT filters.code) = " . count($filtersCondition);
+            $filtersJoins = "
+                JOIN filters_values_products ON products.id = filters_values_products.product_id
+                JOIN filters_values ON filters_values_products.filter_value_id = filters_values.id 
+                JOIN filters ON filters_values.filter_id = filters.id
+            ";
+        }
+
+        if(count($whereCondition) > 0) {
+            $whereCondition = " WHERE ". implode(' AND ', $whereCondition);
+
+        } else {
+            $whereCondition = "";
+        }
+
+        return ["$filtersJoins $whereCondition $endCondition", $wherePrepareValues];
     }
 }

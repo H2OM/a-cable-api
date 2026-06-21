@@ -27,8 +27,8 @@ readonly class CatalogController {
      * @throws ResponseException
      */
     public function getAction(): Response {
-        $page = $this->request->get('page');
-        $limit = $this->request->get('limit');
+        $page = $this->request->get('page') ?? 1;
+        $limit = $this->request->get('limit') ?? 32;
         $filters_params = $this->request->get();
 
         if(empty($filters_params['category'])) {
@@ -37,7 +37,8 @@ readonly class CatalogController {
 
         unset($filters_params['page'], $filters_params['limit']);
 
-        $catalog = $this->productsService->getCatalogByFilters($filters_params);
+        $count = $this->productsService->getCountByFilters($filters_params);
+        $catalog = $this->productsService->getCatalogByFilters((int)$page, (int)$limit, $filters_params);
         $filters = $this->filtersService->getFiltersGroupByCode($filters_params['category']);
         $category = $catalog[0]['category_parent'] ?? null;
 
@@ -48,7 +49,25 @@ readonly class CatalogController {
         return Response::jsonSuccess(data: [
             'category_title' => $category,
             'catalog' => $catalog,
-            'filters' => $filters
+            'filters' => $filters,
+            'count' => $count
         ]);
+    }
+
+    /**
+     * Получение кол-во товаров в каталоге с заданными фильтрами
+     *
+     * @return Response
+     */
+    public function getCountAction(): Response {
+        $filters_params = $this->request->get();
+
+        if(empty($filters_params['category'])) {
+            return Response::jsonError(message: ResponseMessage::ERROR_DATA);
+        }
+
+        $count = $this->productsService->getCountByFilters($filters_params);
+
+        return Response::jsonSuccess(data: $count);
     }
 }
