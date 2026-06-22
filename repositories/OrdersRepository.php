@@ -134,6 +134,20 @@ readonly class OrdersRepository {
     }
 
     /**
+     * Получение кол-ва статусов заказов
+     *
+     * @return array
+     */
+    public function getStatusesCount(): array {
+        return $this->db->query()
+            ->table('orders')
+            ->select(['status', 'COUNT(*) as count'])
+            ->groupBy('status')
+            ->orderBy('status')
+            ->get();
+    }
+
+    /**
      * Получение всех способов доставки
      *
      * @return array

@@ -67,6 +67,18 @@ readonly class CategoriesRepository {
     }
 
     /**
+     * Получить кол-во подкатегорий
+     *
+     * @return int
+     */
+    public function getTypesCount(): int {
+        return (int)$this->db->query()
+            ->table('categories_types')
+            ->select('COUNT(*) as count')
+            ->first()['count'];
+    }
+
+    /**
      * Поиск подтипа категории по строке запроса
      *
      * @param string $query

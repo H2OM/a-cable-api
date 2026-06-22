@@ -48,6 +48,15 @@ readonly class CallbacksService {
     }
 
     /**
+     * Получение кол-ва статусов обращений
+     *
+     * @return array
+     */
+    public function getStatusesCount(): array {
+        return $this->callbacksRepository->getStatusesCount();
+    }
+
+    /**
      * Удаление по id
      *
      * @param array $ids

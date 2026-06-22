@@ -55,6 +55,18 @@ readonly class UserRepository {
     }
 
     /**
+     * Получение кол-ва
+     *
+     * @return int
+     */
+    public function getCount(): int {
+        return (int)$this->db->query()
+            ->table('users')
+            ->select('COUNT(*) AS count')
+            ->first()['count'];
+    }
+
+    /**
      * Добавление нового пользователя
      *
      * @param array $userData

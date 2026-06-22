@@ -11,6 +11,7 @@ class QueryBuilder {
     protected array $select = ['*'];
     protected array $wheres = [];
     protected array $bindings = [];
+    protected string $groupBy = '';
     protected string $orderBy = '';
     protected string $limit = '';
 
@@ -178,6 +179,18 @@ class QueryBuilder {
     }
 
     /**
+     * SQL команда GROUP BY
+     *
+     * @param string $field
+     * @return $this
+     */
+    public function groupBy(string $field): self {
+        $this->groupBy = "GROUP BY $field";
+
+        return $this;
+    }
+
+    /**
      * SQL команда ORDER BY
      *
      * @param string $field
@@ -215,6 +228,10 @@ class QueryBuilder {
 
         if (!empty($this->wheres)) {
             $this->prepareQuery .= " WHERE " . $this->compileWheres($this->wheres);
+        }
+
+        if ($this->groupBy) {
+            $this->prepareQuery .= " " . $this->groupBy;
         }
 
         if ($this->orderBy) {

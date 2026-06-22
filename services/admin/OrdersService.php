@@ -45,6 +45,15 @@ readonly class OrdersService {
     }
 
     /**
+     * Получение кол-ва статусов заказов
+     *
+     * @return array
+     */
+    public function getStatusesCount(): array {
+        return $this->ordersRepository->getStatusesCount();
+    }
+
+    /**
      * Обновление статуса
      *
      * @param array $ids

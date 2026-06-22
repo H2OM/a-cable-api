@@ -51,6 +51,20 @@ readonly class CallbacksRepository {
     }
 
     /**
+     * Получение кол-ва статусов обращений
+     *
+     * @return array
+     */
+    public function getStatusesCount(): array {
+        return $this->db->query()
+            ->table('callbacks')
+            ->select(['status', 'COUNT(*) as count'])
+            ->groupBy('status')
+            ->orderBy('status')
+            ->get();
+    }
+
+    /**
      * Удаление по id
      *
      * @param array $ids

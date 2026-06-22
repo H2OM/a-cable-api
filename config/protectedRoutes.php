@@ -24,6 +24,10 @@ return [
         'base_permission' => 'user',
         'delete' => 'user.delete',
     ],
+    'admin-statistic' => [
+        'class' => AdminMiddleware::class,
+        'base_permission' => '',
+    ],
     'admin-products' => [
         'class' => AdminMiddleware::class,
         'base_permission' => 'products',

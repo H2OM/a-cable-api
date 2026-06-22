@@ -17,4 +17,13 @@ readonly class CategoriesService {
     public function addFiltersToCategories(array $values): bool {
         return $this->categoriesRepository->addFiltersToCategories($values);
     }
+
+    /**
+     * Получить кол-во подкатегорий
+     *
+     * @return int
+     */
+    public function getTypesCount(): int {
+        return $this->categoriesRepository->getTypesCount();
+    }
 }
