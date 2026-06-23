@@ -4,6 +4,7 @@
     use PDO;
     use PDOException;
     use PDOStatement;
+    use RuntimeException;
 
     /** Работа с базой данных */
     class Db {
@@ -23,9 +24,10 @@
                     ]
                 );
             } catch (PDOException $e) {
-                throw new \PDOException(
+                throw new RuntimeException(
                     "Database connection error: " . $e->getMessage(),
-                    (int)$e->getCode()
+                    0,
+                    $e
                 );
             }
         }
