@@ -4,9 +4,9 @@ use app\core\Container;
 use app\core\Router;
 use app\core\App;
 
-require_once __DIR__ . '/composer/vendor/autoload.php';
+require_once __DIR__ . '/../composer/vendor/autoload.php';
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
 
 session_start();
