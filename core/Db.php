@@ -13,7 +13,7 @@
         public function __construct(array $db_config) {
             try {
                 $this->pdo = new PDO(
-                    'mysql:host='.$db_config['host'].';dbname='.$db_config['dbname'].';charset=utf8',
+                    'mysql:host='.$db_config['host'].';dbname='.$db_config['dbname'].';charset=utf8mb4',
                     $db_config['user'],
                     $db_config['pass'],
                     [
