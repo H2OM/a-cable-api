@@ -13,15 +13,16 @@ readonly class FiltersRepository {
      * Получение всех фильтров
      *
      * @param string $categoryCode
+     * @param string|null $categoryTypeCode
      * @return array
      */
-    public function getFilters(string $categoryCode): array {
+    public function getFilters(string $categoryCode, ?string $categoryTypeCode = null): array {
         return $this->db->fetchAll("
             WITH target_types AS (
                 SELECT ct.id
                 FROM categories_types ct
                 JOIN categories c ON ct.category_id = c.id
-                WHERE c.code = ?
+                WHERE c.code = ? and (? IS NULL or ct.code = ?)
             )
             SELECT
                 filters.id,
@@ -69,7 +70,7 @@ readonly class FiltersRepository {
                 IF(filters.id = 5, 'price', value_id)
             ORDER BY
                  filters.position ASC, value_name ASC;
-        ", [$categoryCode, $categoryCode]);
+        ", [$categoryCode, $categoryTypeCode, $categoryTypeCode, $categoryCode]);
     }
 
     /**

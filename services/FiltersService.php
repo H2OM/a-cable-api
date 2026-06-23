@@ -16,11 +16,12 @@ readonly class FiltersService {
      * Получение всех фильтров
      *
      * @param string $categoryCode
+     * @param string|null $categoryTypeCode
      * @return array
      * @throws ResponseException
      */
-    public function getFilters(string $categoryCode): array {
-        $filters = $this->filtersRepository->getFilters($categoryCode);
+    public function getFilters(string $categoryCode, ?string $categoryTypeCode = null): array {
+        $filters = $this->filtersRepository->getFilters($categoryCode, $categoryTypeCode);
 
         if(count($filters) === 0) {
             throw new ResponseException(ResponseMessage::ERROR_DATA, 403);
@@ -33,11 +34,12 @@ readonly class FiltersService {
      * Получение всех фильтров сгруппированных по коду
      *
      * @param string $categoryCode
+     * @param string|null $categoryTypeCode
      * @return array
      * @throws ResponseException
      */
-    public function getFiltersGroupByCode(string $categoryCode): array {
-        $filters = $this->getFilters($categoryCode);
+    public function getFiltersGroupByCode(string $categoryCode, ?string $categoryTypeCode = null): array {
+        $filters = $this->getFilters($categoryCode, $categoryTypeCode);
 
         $groupedFilters = [];
 
@@ -68,10 +70,11 @@ readonly class FiltersService {
      * Получение всех фильтров сгруппированных по типу
      *
      * @param string $categoryCode
+     * @param string|null $categoryTypeCode
      * @return array
      * @throws ResponseException
      */
-    public function getFiltersGroupByType(string $categoryCode): array {
+    public function getFiltersGroupByType(string $categoryCode, ?string $categoryTypeCode = null): array {
         $filters = $this->getFilters($categoryCode);
 
         $groupedFilters = [];

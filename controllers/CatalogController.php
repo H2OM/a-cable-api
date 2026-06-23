@@ -35,11 +35,16 @@ readonly class CatalogController {
             return Response::jsonError(message: ResponseMessage::ERROR_DATA);
         }
 
-        unset($filters_params['page'], $filters_params['limit']);
+        $categoryTypeCode = $filters_params['category_type'] ?? null;
+
+        unset($filters_params['page'], $filters_params['limit'], $filters_params['category_type']);
 
         $count = $this->productsService->getCountByFilters($filters_params);
         $catalog = $this->productsService->getCatalogByFilters((int)$page, (int)$limit, $filters_params);
-        $filters = $this->filtersService->getFiltersGroupByCode($filters_params['category']);
+        $filters = $this->filtersService->getFiltersGroupByCode(
+            categoryCode: $filters_params['category'],
+            categoryTypeCode: $categoryTypeCode
+        );
         $category = $catalog[0]['category_parent'] ?? null;
 
         if(empty($category)) {
