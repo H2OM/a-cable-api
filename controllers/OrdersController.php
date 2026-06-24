@@ -67,10 +67,10 @@ readonly class OrdersController {
             $user['password'] = $data['user']['password'];
         }
 
-        try {
-            $this->notificationService->sendOrderInfo(order: $order, user: $user);
-        } catch (TransportExceptionInterface $e) {
-        }
+//        try {
+//            $this->notificationService->sendOrderInfo(order: $order, user: $user);
+//        } catch (TransportExceptionInterface $e) {
+//        }
 
         return Response::jsonSuccess(data: [
             'order_id' => $orderId,
