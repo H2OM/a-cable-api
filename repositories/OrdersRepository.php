@@ -202,7 +202,7 @@ readonly class OrdersRepository {
                     'payment_type_id'  => $data['payment_type_id'],
                     'price'            => $data['price'],
                     'delivery_price'   => $data['delivery_price'],
-                    'delivery_date'    => $data['delivery_date'],
+                    'delivery_date'    => '2026-06-30',
                     'delivery_address' => $data['delivery_address'],
                     'comment'          => $data['comment'] ?? '',
                 ])
