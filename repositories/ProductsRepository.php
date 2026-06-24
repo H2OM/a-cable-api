@@ -128,11 +128,14 @@ readonly class ProductsRepository {
     public function getCountByFilters(array $filters): int {
         $sql = "
             SELECT 
-                COUNT(DISTINCT products.id) AS count
-            FROM products
-            JOIN categories_types ON products.category_type_id = categories_types.id
-            JOIN categories ON categories_types.category_id = categories.id
-        ";
+                COUNT(*) AS count
+            FROM (
+                SELECT products.id
+                FROM products
+                JOIN categories_types ON products.category_type_id = categories_types.id
+                JOIN categories ON categories_types.category_id = categories.id
+                %s
+        ) AS f_p";
 
         $preparedFilters = $this->prepareFilters($filters);
         $filtersKeys = array_keys($filters);
@@ -140,10 +143,10 @@ readonly class ProductsRepository {
         rsort($filtersKeys);
 
         if(in_array('brand', $filtersKeys)) {
-            $sql .= " LEFT JOIN brands ON products.brand_id = brands.id";
+            $preparedFilters[0] = " LEFT JOIN brands ON products.brand_id = brands.id " . $preparedFilters[0];
         }
 
-        return (int)($this->db->fetchOne("$sql $preparedFilters[0]", $preparedFilters[1])['count'] ?? 0);
+        return (int)($this->db->fetchOne(sprintf($sql, $preparedFilters[0]), $preparedFilters[1])['count'] ?? 0);
     }
 
     /**
@@ -387,18 +390,16 @@ readonly class ProductsRepository {
     }
 
     /**
-     * Обновление товаров
+     * Обновление товаров по артикулу
      *
-     * @param array $ids
      * @param array $data
      * @return bool
      */
-    public function updateMany(array $ids, array $data): bool {
+    public function updateMany(array $data): bool {
         return $this->db->query()
             ->table('products')
-            ->where('id', 'IN', $ids)
-            ->update($data)
-            ->execute();
+            ->updateManyNew($data)
+            ->executeWithEmulation();
     }
 
     /**

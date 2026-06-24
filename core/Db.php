@@ -112,6 +112,24 @@
         }
 
         /**
+         * Выполнение запроса с активной эмуляцией
+         *
+         * @param string $sql
+         * @param array $params
+         * @return bool
+         */
+        public function executeWithEmulation(string $sql, array $params = []): bool {
+            $this->dangerousActivateEmulation();
+
+            $state = $this->pdo->prepare($sql);
+            $result = $state->execute($params);
+
+            $this->dangerousDisableEmulation();
+
+            return $result;
+        }
+
+        /**
          * Выполнение запроса и возвращение состояния
          *
          * @param string $sql
@@ -123,6 +141,24 @@
             $state->execute($params);
 
             return $state;
+        }
+
+        /**
+         * Активация эмуляции
+         *
+         * @return void
+         */
+        public function dangerousActivateEmulation():void {
+            $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+        }
+
+        /**
+         * Деактивация эмуляции
+         *
+         * @return void
+         */
+        public function dangerousDisableEmulation():void {
+            $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
         }
 
         /**

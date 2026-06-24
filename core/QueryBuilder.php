@@ -342,6 +342,59 @@ class QueryBuilder {
     }
 
     /**
+     * Подготовка запроса. Обновление таблицы с разными строками
+     * >**Обновление текущих строк с возможностью выполнения математических операций над ними**
+     *
+     * @param array $data Данные:
+     *
+     *      [
+     *          [main pair, ...fields] => ['id' => number, 'count' => number]
+     *      ]
+     * @param array $setCondition Проводимые операции:
+     *
+     *      [
+     *         field => condition ('count' => '-')
+     *      ]
+     * @return $this
+     */
+    public function updateManyNew(array $data, array $setCondition = []): self {
+        $placeholders = [];
+        $setPlaceholders = [];
+        $this->bindings = [];
+
+        foreach ($data as $value) {
+            $fils = array_fill(0, count($value), "?");
+
+            $placeholders[] = 'ROW(' . implode(', ', $fils) . ')';
+            $this->bindings = [...$this->bindings, ...array_values($value)];
+        }
+
+        $firstKey = array_key_first($data[0]);
+
+        foreach (array_keys($data[0]) as $i => $key) {
+            if($key === $firstKey) continue;
+
+            $placeholder = "{$this->table}." . $key . " = ";
+
+            if(!empty($setCondition[$key])) {
+                $placeholder .= "{$this->table}." . $key . " " . $setCondition[$key];
+            }
+
+            $placeholder .= " t.column_" . $i;
+            $setPlaceholders[] = $placeholder;
+        }
+
+        $this->prepareQuery = "
+            UPDATE {$this->table}
+            JOIN (
+                VALUES " . implode(', ', $placeholders) .
+            ") AS t ON {$this->table}.$firstKey = t.column_0
+            SET " . implode(', ', $setPlaceholders);
+
+        return $this;
+    }
+
+    /**
      * Подготовка SQL запроса. Удаление
      *
      * @return QueryBuilder
@@ -361,6 +414,17 @@ class QueryBuilder {
         if(empty($this->prepareQuery)) $this->toSql();
 
         return $this->db->execute($this->prepareQuery, $this->bindings);
+    }
+
+    /**
+     * Выполнение SQL запроса с активной эмуляцией. Возвращение статуса выполнения
+     *
+     * @return bool
+     */
+    public function executeWithEmulation(): bool {
+        if(empty($this->prepareQuery)) $this->toSql();
+
+        return $this->db->executeWithEmulation($this->prepareQuery, $this->bindings);
     }
 
     /**

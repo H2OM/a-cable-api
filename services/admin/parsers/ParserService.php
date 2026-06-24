@@ -4,7 +4,7 @@ namespace app\services\admin\parsers;
 
 /** Абстрактный сервис для управления парсерами */
 readonly abstract class ParserService {
-    protected const string IMAGES_PATH = __DIR__ . "/../../../../public/img/";
+    protected const string IMAGES_PATH = __DIR__ . "/../../../public/img/";
 
     /**
      * Выгрузка из

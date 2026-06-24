@@ -92,25 +92,56 @@ readonly class AnlanParserService extends ParserService {
                 subject: $parseProduct['name']
             )));
 
+            $price = $parseProduct['price'];
+
+            if(empty($price) || (int)$price === 0) {
+                $price = mt_rand(2000, 30000);
+            }
+
             $products[] = [
+                'article' => $parseProduct['sku'],
                 'title' => $parsedName,
                 'brand_id' => $brandsMap[$parseProduct['brand_code']],
                 'category_type_id' => $categoryTypeId,
-                'article' => $parseProduct['sku'],
-                'price' => $parseProduct['price'],
+                'price' => $price,
                 'price_old' => 0,
                 'unit' => $parseProduct['units'] ?? 'шт.',
                 'image' => $images[0] ?? '',
                 'slider_images' => implode(',', $images),
-                'description' =>  strip_tags($parseProduct['description']),
-                'hit' => 0
+                'description' =>  strip_tags($parseProduct['description'] ?? '')
             ];
+        }
+
+        if(empty($products)) {
+            throw new ResponseException(ResponseMessage::ERROR_CATALOG_NOT_FOUND);
         }
 
         try {
             $this->db->beginTransaction();
 
-            if(!$this->productsRepository->insert($products)) {
+            $updateArticles = array_column(
+                $this->productsRepository->getProductsIdsByArticle(array_map(function ($product) {
+                    return $product['article'];
+                }, $products)),
+                'article'
+            );
+            $insertProducts = [];
+            $updateProducts = [];
+
+            foreach ($products as $product) {
+                if(in_array($product['article'], $updateArticles)) {
+                    $updateProducts[] = $product;
+                    continue;
+                }
+
+                $insertProducts[] = $product;
+            }
+
+            if(!empty($updateProducts) && !$this->productsRepository->updateMany($updateProducts)) {
+                throw new ResponseException(ResponseMessage::ERROR_UPDATE_PRODUCTS);
+            }
+
+            if(!empty($insertProducts) && !$this->productsRepository->insert($insertProducts)) {
                 throw new ResponseException(ResponseMessage::ERROR_ADD_PRODUCT);
             }
 

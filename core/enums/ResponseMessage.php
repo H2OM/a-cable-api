@@ -15,7 +15,6 @@ enum ResponseMessage: string {
     case ERROR_AUTH = 'Ошибка авторизации';
     case ERROR_NOT_AUTH = 'Не авторизирован';
     case ERROR_PERMISSIONS = 'Недостаточно прав';
-    case ERROR_UPDATE = 'Не удалось обновить данные';
     case ERROR_ADD = 'Не удалось добавить данные';
     case ERROR_ADD_PRODUCTS = 'Не удалось добавить товары';
     case ERROR_ADD_PRODUCT = 'Не удалось добавить товар';
@@ -24,6 +23,8 @@ enum ResponseMessage: string {
     case ERROR_DUPLICATE = 'Не удалось добавить данные. Позиция уже существует!';
     case ERROR_CREATE_ORDER = 'Не удалось создать заказ';
     case ERROR_USER_PHONE_ISSET = 'Пользователь с таким номером зарегистрирован!';
+    case ERROR_UPDATE_PRODUCTS = 'Не удалось обновить товары';
+    case ERROR_UPDATE = 'Не удалось обновить данные';
     case ERROR_UPDATE_STATUS = 'Не удалось обновить статус';
     case ERROR_TOKEN = 'Истек токен авторизации';
     case SUCCESS_SUBSCRIBE = 'Вы успешно подписаны на обновления!';
