@@ -14,8 +14,8 @@ $token = $env->get('YANDEX_TOKEN');
 $url = "https://api-metrika.yandex.net/stat/v1/data?" . http_build_query([
     'id'     => $id,
     'metrics' => 'ym:s:visits,ym:s:pageviews,ym:s:users',
-    'date1'   => 'today',
-    'date2'   => 'today'
+    'date1'   => $date,
+    'date2'   => $date
 ]);
 
 $ch = curl_init($url);
