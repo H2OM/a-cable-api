@@ -15,7 +15,7 @@ readonly class MailService {
     public function __construct(private Env $env) {
         $transport = Transport::fromDsn(
             sprintf(
-                'smtp://%s:%s@%s:%s',
+                'smtp://%s:%s@%s:%s?encryption=tls',
                 $env->get('MAIL_USER'),
                 $env->get('MAIL_PASSWORD'),
                 $env->get('MAIL_HOST'),
