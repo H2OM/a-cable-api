@@ -9,6 +9,15 @@ require_once __DIR__ . '/../composer/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
 
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => $_ENV['SYSTEM_BASE_DOMAIN'],
+    'secure' => true,
+    'httponly' => true,
+    'samesite' => 'None'
+]);
+
 session_start();
 
 App::init(new Container());
