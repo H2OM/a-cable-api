@@ -12,7 +12,7 @@ $dotenv->load();
 session_set_cookie_params([
     'lifetime' => 0,
     'path' => '/',
-    'domain' => $_ENV['SYSTEM_BASE_DOMAIN'],
+    'domain' => '.' . $_ENV['SYSTEM_BASE_DOMAIN'],
     'secure' => true,
     'httponly' => true,
     'samesite' => 'None'
